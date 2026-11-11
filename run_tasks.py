@@ -41,9 +41,7 @@ OPENCODE_CONFIG = {
     },
 }
 
-DEFAULT_MODEL = (
-    "hf.co/TheShellMaster/cypher-Qwen2.5-Coder-7B-Instruct-abliterated:Q5_K_M"
-)
+DEFAULT_MODEL = "cypher-qwen35-9b"
 
 
 NOTES = """\
@@ -178,9 +176,20 @@ def run_task(task, workroot, base_url, model, timeout):
         write(task_dir / name, content)
     build_config(task_dir, base_url, model)
 
+    # Isole OpenCode : sans cela il fusionne la config globale de l'utilisateur
+    # (skills, serveurs MCP, autres fournisseurs) et part dans une autre tâche.
+    config_home = task_dir / ".config"
+    config_home.mkdir(exist_ok=True)
+    env = {
+        **os.environ,
+        "XDG_CONFIG_HOME": str(config_home),
+        "OPENCODE_DISABLE_AUTOUPDATE": "1",
+    }
+
     command = [
         "opencode",
         "run",
+        "--standalone",  # force la lecture de l'opencode.json local
         "--model",
         f"cypher/{model}",
         task["prompt"],
@@ -192,6 +201,7 @@ def run_task(task, workroot, base_url, model, timeout):
             capture_output=True,
             text=True,
             timeout=timeout,
+            env=env,
         )
         output = (proc.stdout or "") + (proc.stderr or "")
         code = proc.returncode
