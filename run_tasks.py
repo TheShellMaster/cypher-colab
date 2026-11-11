@@ -176,20 +176,15 @@ def run_task(task, workroot, base_url, model, timeout):
         write(task_dir / name, content)
     build_config(task_dir, base_url, model)
 
-    # Isole OpenCode : sans cela il fusionne la config globale de l'utilisateur
-    # (skills, serveurs MCP, autres fournisseurs) et part dans une autre tâche.
-    config_home = task_dir / ".config"
-    config_home.mkdir(exist_ok=True)
-    env = {
-        **os.environ,
-        "XDG_CONFIG_HOME": str(config_home),
-        "OPENCODE_DISABLE_AUTOUPDATE": "1",
-    }
+    # --standalone force la lecture de l'opencode.json local. On ne touche pas à
+    # XDG_CONFIG_HOME : OpenCode tente alors de re-télécharger son catalogue de
+    # modèles et se bloque.
+    env = {**os.environ, "OPENCODE_DISABLE_AUTOUPDATE": "1"}
 
     command = [
         "opencode",
         "run",
-        "--standalone",  # force la lecture de l'opencode.json local
+        "--standalone",
         "--model",
         f"cypher/{model}",
         task["prompt"],
