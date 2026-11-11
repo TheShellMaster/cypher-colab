@@ -179,7 +179,26 @@ def run_task(task, workroot, base_url, model, timeout):
     # --standalone force la lecture de l'opencode.json local. On ne touche pas à
     # XDG_CONFIG_HOME : OpenCode tente alors de re-télécharger son catalogue de
     # modèles et se bloque.
-    env = {**os.environ, "OPENCODE_DISABLE_AUTOUPDATE": "1"}
+    # OpenCode résout le dossier du projet via la variable PWD, pas via le
+    # répertoire courant du processus : sans elle, il ignore l'opencode.json
+    # local et répond « Model unavailable ».
+    env = {
+        **os.environ,
+        "PWD": str(task_dir),
+        "OPENCODE_DISABLE_AUTOUPDATE": "1",
+    }
+
+    # Au tout premier lancement dans un dossier neuf, OpenCode répond
+    # « Model unavailable » le temps d'indexer la configuration. Un appel
+    # `opencode models` amorce ce cache avant la vraie exécution.
+    subprocess.run(
+        ["opencode", "models"],
+        cwd=task_dir,
+        capture_output=True,
+        text=True,
+        timeout=300,
+        env=env,
+    )
 
     command = [
         "opencode",
