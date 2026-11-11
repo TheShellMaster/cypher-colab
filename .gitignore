@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 agent-runs/
+webui/
+webui-data/
+webui.log
+__pycache__
