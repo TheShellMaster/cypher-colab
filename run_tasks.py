@@ -41,7 +41,7 @@ OPENCODE_CONFIG = {
     },
 }
 
-DEFAULT_MODEL = "cypher-qwen35-4b"
+DEFAULT_MODEL = "cypher-qwen35-9b"
 
 
 NOTES = """\
